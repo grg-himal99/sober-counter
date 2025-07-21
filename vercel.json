@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "framework": "nuxt",
+  "regions": ["sfo1"],
+  "env": {
+    "NUXT_PUBLIC_FRIEND_NAME": "Deven"
+  },
+  "functions": {
+    "api/**": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "outputDirectory": ".output"
+}
