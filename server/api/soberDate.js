@@ -44,6 +44,29 @@ export default defineEventHandler(async (event) => {
       if (body.date) {
         // Update the cached date
         cachedDate = body.date;
+        
+        // Update the JSON file
+        try {
+          // Import fs modules
+          const { writeFileSync } = await import('fs');
+          const { join } = await import('path');
+          const { fileURLToPath } = await import('url');
+          const { dirname } = await import('path');
+          
+          // Get the path to the public directory
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = dirname(__filename);
+          const publicDir = join(__dirname, '../..', 'public');
+          const jsonPath = join(publicDir, 'soberDate.json');
+          
+          // Write the new date to the JSON file
+          writeFileSync(jsonPath, JSON.stringify({ date: body.date }));
+          console.log('JSON file updated successfully');
+        } catch (fileError) {
+          console.error('Error updating JSON file:', fileError);
+          // Continue even if file update fails
+        }
+        
         return { success: true, date: body.date };
       } else {
         return { success: false, error: 'No date provided' };

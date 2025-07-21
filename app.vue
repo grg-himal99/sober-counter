@@ -48,7 +48,7 @@
         <div class="progress-text">{{ progressPercent }}%</div>
       </div>
       
-      <button class="report-btn" @click="showReportModal = true">
+      <button class="report-btn" @click="openReportModal">
         <span class="report-icon">⚠️</span> Oops, he broke promise and drank again
       </button>
       
@@ -59,6 +59,29 @@
           <p>This action will reset {{ friendName }}'s sobriety counter. Please provide evidence to confirm.</p>
           
           <div class="evidence-section">
+            <h3>When did {{ friendName }} drink?</h3>
+            <div class="date-picker-container">
+              <div class="date-time-inputs">
+                <div class="date-input">
+                  <label for="relapse-date">Date:</label>
+                  <input 
+                    type="date" 
+                    id="relapse-date" 
+                    v-model="relapseDate"
+                    :max="todayDateString"
+                  />
+                </div>
+                <div class="time-input">
+                  <label for="relapse-time">Time:</label>
+                  <input 
+                    type="time" 
+                    id="relapse-time" 
+                    v-model="relapseTime"
+                  />
+                </div>
+              </div>
+            </div>
+            
             <h3>Evidence Required</h3>
             <p>Please upload a photo showing {{ friendName }} drinking:</p>
             
@@ -83,7 +106,7 @@
               <button class="cancel-btn" @click="showReportModal = false">Cancel</button>
               <button 
                 class="confirm-btn" 
-                :disabled="!imagePreview" 
+                :disabled="!imagePreview || !relapseDate || !relapseTime" 
                 @click="confirmReset"
               >
                 Confirm Reset
@@ -185,6 +208,30 @@ const showReportModal = ref(false);
 const imagePreview = ref(null);
 const fileInput = ref(null);
 
+// Date picker functionality
+const relapseDate = ref('');
+const relapseTime = ref('');
+
+// Get today's date in YYYY-MM-DD format for max date attribute
+const todayDateString = computed(() => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+});
+
+// Set default values when modal opens
+function openReportModal() {
+  showReportModal.value = true;
+  
+  // Set default date to today
+  relapseDate.value = new Date().toISOString().split('T')[0];
+  
+  // Set default time to current time
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  relapseTime.value = `${hours}:${minutes}`;
+}
+
 // Format date for display in JST (Japan Standard Time)
 function formatDate(dateString) {
   if (!dateString) return 'Loading...';
@@ -234,8 +281,24 @@ function handleFileUpload(event) {
 }
 
 async function confirmReset() {
-  // Reset the counter by setting the start date to now
-  const newDate = new Date().toISOString();
+  // Check if date and time are selected
+  if (!relapseDate.value || !relapseTime.value) {
+    alert('Please select both date and time');
+    return;
+  }
+  
+  // Create a date object from the selected date and time
+  const dateTimeString = `${relapseDate.value}T${relapseTime.value}:00`;
+  const selectedDate = new Date(dateTimeString);
+  
+  // Check if the date is valid
+  if (isNaN(selectedDate.getTime())) {
+    alert('Invalid date or time selected');
+    return;
+  }
+  
+  // Convert to ISO string
+  const newDate = selectedDate.toISOString();
   startDate.value = newDate;
   
   // Save to the API so all users see the same date
@@ -260,12 +323,12 @@ async function confirmReset() {
   // Update the counter immediately
   updateCounter();
   
-  // Format the current time in JST for the confirmation message
+  // Format the selected time in JST for the confirmation message
   const jstTime = new Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
     dateStyle: 'medium',
     timeStyle: 'medium'
-  }).format(new Date());
+  }).format(selectedDate);
   
   // Show confirmation with JST time
   alert(`Counter has been reset to ${jstTime} (JST). Supporting your friend through this journey is important.`);
@@ -585,7 +648,45 @@ h1 {
   border-radius: 5px;
 }
 
-/* Password section removed */
+.date-picker-container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+
+.date-time-inputs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.date-input, .time-input {
+  flex: 1;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #495057;
+  text-align: left;
+}
+
+input[type="date"], input[type="time"] {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: white;
+}
+
+@media (max-width: 576px) {
+  .date-time-inputs {
+    flex-direction: column;
+  }
+}
 
 .modal-actions {
   display: flex;
