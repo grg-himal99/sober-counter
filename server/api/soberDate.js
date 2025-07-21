@@ -1,5 +1,6 @@
-// Default date
-const defaultDate = new Date('2025-03-19T09:00:00').toISOString();
+// Default date (in JST - Japan Standard Time)
+// March 19, 2025, 9:00 AM JST
+const defaultDate = new Date('2025-03-19T00:00:00Z').toISOString(); // UTC time that corresponds to 9:00 AM JST
 
 // In-memory storage that persists between requests
 let cachedDate = null;

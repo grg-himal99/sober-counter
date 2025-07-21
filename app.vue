@@ -104,8 +104,9 @@ import { useRuntimeConfig } from 'nuxt/app';
 const config = useRuntimeConfig();
 const friendName = ref(config.public.friendName);
 
-// Default date as fallback
-const defaultDate = new Date('2025-03-19T09:00:00').toISOString();
+// Default date as fallback (in JST - Japan Standard Time)
+// March 19, 2025, 9:00 AM JST
+const defaultDate = new Date('2025-03-19T00:00:00Z').toISOString(); // UTC time that corresponds to 9:00 AM JST
 // Initialize with default date, will be updated from API
 const startDate = ref(defaultDate);
 
@@ -184,7 +185,7 @@ const showReportModal = ref(false);
 const imagePreview = ref(null);
 const fileInput = ref(null);
 
-// Format date for display
+// Format date for display in JST (Japan Standard Time)
 function formatDate(dateString) {
   if (!dateString) return 'Loading...';
   
@@ -192,14 +193,17 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
     
-    return date.toLocaleDateString('en-US', { 
+    // Format date in JST timezone
+    return new Intl.DateTimeFormat('ja-JP', { 
+      timeZone: 'Asia/Tokyo',
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    });
+      minute: '2-digit',
+      hour12: false // Use 24-hour format
+    }).format(date);
   } catch (error) {
     console.error('Error formatting date:', error);
     return 'Invalid Date';
@@ -256,8 +260,15 @@ async function confirmReset() {
   // Update the counter immediately
   updateCounter();
   
-  // Show confirmation
-  alert('Counter has been reset. Supporting your friend through this journey is important.');
+  // Format the current time in JST for the confirmation message
+  const jstTime = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  }).format(new Date());
+  
+  // Show confirmation with JST time
+  alert(`Counter has been reset to ${jstTime} (JST). Supporting your friend through this journey is important.`);
 }
 
 function updateCounter() {
